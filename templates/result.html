@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Loan Approval Result</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to right, #e3f2fd, #f4f6f8);
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 700px;
+            margin: 40px auto;
+            background: white;
+            border-radius: 18px;
+            padding: 30px;
+            box-shadow: 0px 8px 25px rgba(0,0,0,0.15);
+        }
+
+        h1 {
+            color: #1e3c72;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        h2, h3 {
+            color: #1e3a8a;
+            margin-top: 25px;
+        }
+
+        .decision {
+            font-size: 28px;
+            font-weight: bold;
+            margin: 15px 0;
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .approved {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .review {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .box {
+            background: #f7f9fc;
+            border-radius: 12px;
+            padding: 18px;
+            margin-top: 18px;
+            border-left: 5px solid #2563eb;
+        }
+
+        .box p {
+            font-size: 17px;
+            margin: 10px 0;
+        }
+
+        .low {
+            color: green;
+            font-weight: bold;
+        }
+
+        .medium {
+            color: orange;
+            font-weight: bold;
+        }
+
+        .high {
+            color: red;
+            font-weight: bold;
+        }
+
+        .loan-range {
+            color: #0d47a1;
+            font-weight: bold;
+        }
+
+        .note {
+            background: #fff3cd;
+            color: #856404;
+            padding: 12px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        .danger-note {
+            background: #fdecea;
+            color: #b71c1c;
+            padding: 12px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        .success-note {
+            background: #e8f5e9;
+            color: #1b5e20;
+            padding: 12px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        .explanation {
+            background: #eef4ff;
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+
+        .explanation li {
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .btn {
+            display: inline-block;
+            margin-top: 25px;
+            padding: 12px 25px;
+            background: #1e88e5;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .btn:hover {
+            background: #1565c0;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>In-Principle Loan Approval</h1>
+
+    {% if "Rejected" in decision %}
+        <div class="decision rejected">
+            {{ decision }}
+        </div>
+    {% elif "Review" in decision or "Partial" in decision or "Condition" in decision %}
+        <div class="decision review">
+            {{ decision }}
+        </div>
+    {% else %}
+        <div class="decision approved">
+            {{ decision }}
+        </div>
+    {% endif %}
+
+    <!-- LOAN DECISION SUMMARY -->
+
+    <div class="box">
+        <h3>Loan Decision Summary</h3>
+
+        <p>
+            <b>Risk Score:</b>
+            {{ risk }}
+        </p>
+
+        <p>
+            <b>Risk Category:</b>
+            <span class="{{ category|lower }}">
+                {{ category }}
+            </span>
+        </p>
+
+        <p>
+            <b>Requested Loan Amount:</b>
+            ₹ {{ requested_loan }}
+        </p>
+
+        <p>
+            <b>Final Recommended Loan Amount:</b>
+            ₹ {{ recommended_loan }}
+        </p>
+
+        <p class="loan-range">
+            <b>Eligible Loan Range:</b>
+            ₹ {{ loan_lower }} - ₹ {{ loan_upper }}
+        </p>
+
+        <p>
+            <b>Eligible Loan Percentage:</b>
+            {{ approval_percentage }}%
+        </p>
+    </div>
+
+    <!-- EMI AND TENURE ANALYSIS -->
+
+    <div class="box">
+        <h3>EMI and Tenure Analysis</h3>
+
+        <p>
+            <b>User Entered EMI:</b>
+            ₹ {{ user_emi }}
+        </p>
+
+
+        <p>
+            <b>Required EMI for Requested Loan:</b>
+            ₹ {{ required_emi }}
+        </p>
+
+        <p>
+            <b>EMI Shortfall for Full Loan:</b>
+            ₹ {{ emi_shortfall }}
+        </p>
+
+        <p>
+            <b>Employment Experience:</b>
+            {{ emp_length }} years
+        </p>
+
+        <p>
+            <b>Remaining Working Years:</b>
+            {{ remaining_work_years }} years
+        </p>
+
+        <p>
+            <b>Maximum Allowed Repayment Tenure:</b>
+            {{ max_allowed_tenure }} months
+        </p>
+
+        {% if tenure_needed %}
+            <p>
+                <b>Tenure Needed for Requested Loan:</b>
+                {{ tenure_needed }} months
+            </p>
+        {% else %}
+            <p>
+                <b>Tenure Needed for Requested Loan:</b>
+                Not possible with entered EMI
+            </p>
+        {% endif %}
+
+        <p>
+            <b>Final Recommended Tenure:</b>
+            {{ final_tenure }} months
+        </p>
+
+        {% if emi_shortfall > 0 %}
+            <div class="danger-note">
+                Entered EMI is lower than the EMI required for the full requested loan.
+                Applicant needs ₹ {{ emi_shortfall }} more EMI to become eligible for the full requested loan.
+            </div>
+        {% endif %}
+
+        {% if tenure_needed and tenure_needed > max_allowed_tenure %}
+            <div class="note">
+                Requested loan needs more time than the applicant's remaining working period.
+                So the system recommends a reduced loan amount.
+            </div>
+        {% endif %}
+
+        {% if tenure_needed and tenure_needed <= max_allowed_tenure and emi_shortfall == 0 %}
+            <div class="success-note">
+                Requested loan can be repaid within the remaining working period.
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- EXISTING LOAN IMPACT -->
+
+    {% if has_existing_loan == "yes" %}
+    <div class="box">
+        <h3>Existing Loan Impact</h3>
+
+        <p>
+            <b>Existing Loan Amount:</b>
+            ₹ {{ existing_loan_amount }}
+        </p>
+
+        <p>
+            <b>Remaining Existing Loan:</b>
+            ₹ {{ existing_loan_remaining }}
+        </p>
+
+        <p>
+            <b>Existing Loan EMI:</b>
+            ₹ {{ existing_loan_emi }}
+        </p>
+
+        <p>
+            <b>Existing Loan Tenure:</b>
+            {{ existing_loan_tenure }} months
+        </p>
+
+        <p>
+            <b>Total EMI Burden:</b>
+            {{ total_emi_ratio }}%
+        </p>
+    </div>
+    {% endif %}
+
+    <!-- EXPLANATION -->
+
+    <div class="explanation">
+        <h2>Why this decision?</h2>
+
+        <ul>
+            {% for item in explanation %}
+                {% if "Annual income was projected" not in item %}
+                    <li>{{ item }}</li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    </div>
+
+    <a href="/" class="btn">
+        ← Check Another Application
+    </a>
+
+</div>
+
+</body>
+</html>

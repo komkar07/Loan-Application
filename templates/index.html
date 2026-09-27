@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>In-Principle Loan Approval System</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to right, #dbeafe, #f8fafc);
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 500px;
+            margin: 40px auto;
+            background: white;
+            padding: 35px;
+            border-radius: 18px;
+            box-shadow: 0px 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .header h1 {
+            color: #1e3a8a;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #555;
+            font-size: 15px;
+        }
+
+        .section-title {
+            text-align: left;
+            margin-top: 18px;
+            margin-bottom: 8px;
+            color: #374151;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 15px;
+            box-sizing: border-box;
+            transition: 0.3s;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: #2563eb;
+            outline: none;
+            box-shadow: 0px 0px 5px rgba(37,99,235,0.4);
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(to right, #2563eb, #1d4ed8);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: linear-gradient(to right, #1d4ed8, #1e40af);
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #b91c1c;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        .info {
+            background: #eff6ff;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            color: #1e40af;
+            font-size: 14px;
+        }
+
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid #e5e7eb;
+            margin: 22px 0;
+        }
+    </style>
+</head>
+
+<body onload="toggleExistingLoan()">
+
+<div class="container">
+
+    <div class="header">
+        <h1>In-Principle Loan Approval</h1>
+
+        <p>
+            AI-powered Loan Eligibility Prediction with
+            Risk assessment and Explainable decision analysis
+        </p>
+    </div>
+
+    <div class="info">
+        Please enter the applicant’s financial information
+        to evaluate loan eligibility and risk profile.
+    </div>
+
+    <div class="section-title">
+        PAN Verification
+    </div>
+
+    <form action="/fetch_pan" method="post">
+
+        <input
+            name="pan"
+            type="text"
+            placeholder="Enter PAN Number (Optional)"
+        >
+
+        <button type="submit">
+            Fetch Customer Details
+        </button>
+
+    </form>
+
+    <hr>
+
+    <form action="/predict" method="post">
+
+        <div class="section-title">
+            Loan Details
+        </div>
+
+        <input
+            name="loan_amnt"
+            type="number"
+            min="1000"
+            max="5000000"
+            placeholder="Requested Loan Amount"
+            required
+        >
+
+        <input
+            name="installment"
+            type="number"
+            min="1000"
+            max="100000"
+            placeholder="Monthly EMI Capability"
+            required
+        >
+
+        <div class="section-title">
+            Income & Employment
+        </div>
+
+        <input
+            name="annual_inc"
+            type="number"
+            min="10000"
+            max="100000000"
+            placeholder="Annual Income"
+            value="{{ customer.get('annual_inc', '') if customer else '' }}"
+            required
+        >
+
+        <input
+            name="monthly_debt"
+            type="number"
+            min="0"
+            placeholder="Existing Monthly Debt"
+            value="{{ customer.get('monthly_debt', '') if customer else '' }}"
+            required
+        >
+
+        <input
+            name="emp_length"
+            type="number"
+            min="0"
+            max="40"
+            placeholder="Employment Length (Years)"
+            value="{{ customer.get('emp_length', '') if customer else '' }}"
+            required
+        >
+
+        <div class="section-title">
+            Existing Loan Details
+        </div>
+
+        <select
+            name="has_existing_loan"
+            id="has_existing_loan"
+            required
+            onchange="toggleExistingLoan()"
+        >
+            <option value="">Do you have an existing loan?</option>
+
+            <option value="yes"
+                {% if customer and customer.get('has_existing_loan') == 1 %}selected{% endif %}
+            >
+                Yes
+            </option>
+
+            <option value="no"
+                {% if customer and customer.get('has_existing_loan') == 0 %}selected{% endif %}
+            >
+                No
+            </option>
+        </select>
+
+        <div id="existing_loan_section">
+
+            <input
+                name="existing_loan_amount"
+                id="existing_loan_amount"
+                type="number"
+                min="0"
+                placeholder="Total Loan Amount"
+                value="{{ customer.get('existing_loan_amount', '') if customer else '' }}"
+            >
+
+            <input
+                name="existing_loan_remaining"
+                id="existing_loan_remaining"
+                type="number"
+                min="0"
+                placeholder="Loan Amount Remaining"
+                value="{{ customer.get('existing_loan_remaining', '') if customer else '' }}"
+            >
+
+            <input
+                name="existing_loan_emi"
+                id="existing_loan_emi"
+                type="number"
+                min="0"
+                placeholder="Existing Loan Monthly EMI"
+                value="{{ customer.get('existing_loan_emi', '') if customer else '' }}"
+            >
+
+            <input
+                name="existing_loan_tenure"
+                id="existing_loan_tenure"
+                type="number"
+                min="0"
+                max="360"
+                placeholder="Existing Loan Tenure Remaining (Months)"
+                value="{{ customer.get('existing_loan_tenure', '') if customer else '' }}"
+            >
+
+        </div>
+
+        <div class="section-title">
+            Financial Stability
+        </div>
+
+        <input
+            name="savings"
+            type="number"
+            min="0"
+            placeholder="Total Savings / Bank Balance"
+            value="{{ customer.get('savings', '') if customer else '' }}"
+            required
+        >
+
+        <select name="collateral" required>
+            <option value="">Collateral Available?</option>
+            <option value="1">Yes</option>
+            <option value="0">No</option>
+        </select>
+
+        <div class="section-title">
+            Credit History
+        </div>
+
+        <input
+            name="delinq_2yrs"
+            type="number"
+            min="0"
+            max="20"
+            placeholder="Previous Delinquencies"
+            value="{{ customer.get('delinq_2yrs', '') if customer else '' }}"
+            required
+        >
+
+        <input
+            name="pub_rec"
+            type="number"
+            min="0"
+            max="20"
+            placeholder="Public Records"
+            value="{{ customer.get('pub_rec', '') if customer else '' }}"
+            required
+        >
+
+        <button type="submit">
+            Predict Loan Eligibility
+        </button>
+
+        {% if error %}
+            <div class="error">
+                {{ error }}
+            </div>
+        {% endif %}
+
+    </form>
+
+    <div class="footer">
+        M.Tech Final Year Project • AI-Based Loan Risk Prediction System
+    </div>
+
+</div>
+
+<script>
+function toggleExistingLoan() {
+    const choice = document.getElementById("has_existing_loan").value;
+    const section = document.getElementById("existing_loan_section");
+
+    const loanAmount = document.getElementById("existing_loan_amount");
+    const loanRemaining = document.getElementById("existing_loan_remaining");
+    const loanEmi = document.getElementById("existing_loan_emi");
+    const loanTenure = document.getElementById("existing_loan_tenure");
+
+    if (choice === "yes") {
+        section.style.display = "block";
+
+        loanAmount.required = true;
+        loanRemaining.required = true;
+        loanEmi.required = true;
+        loanTenure.required = true;
+
+    } else {
+        section.style.display = "none";
+
+        loanAmount.required = false;
+        loanRemaining.required = false;
+        loanEmi.required = false;
+        loanTenure.required = false;
+
+        loanAmount.value = 0;
+        loanRemaining.value = 0;
+        loanEmi.value = 0;
+        loanTenure.value = 0;
+    }
+}
+</script>
+
+</body>
+</html>
